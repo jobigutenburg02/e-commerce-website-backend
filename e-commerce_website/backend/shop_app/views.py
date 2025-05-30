@@ -24,43 +24,45 @@ paypalrestsdk.configure({
 
 @api_view(["GET"])
 def products(request):
-    products = Product.objects.all()
-    serializer = ProductSerializer(products, many=True)
-    return Response(serializer.data)
+    products = Product.objects.all() # Fetch all Product objects from db
+    serializer = ProductSerializer(products, many=True) # Serialize product data for JSON response
+    return Response(serializer.data) # Return serialized product data as JSON
 
 @api_view(["GET"])
 def product_detail(request, slug):
-    product = Product.objects.get(slug=slug)
-    serializer = DetailedProductSerializer(product)
-    return Response(serializer.data)
+    product = Product.objects.get(slug=slug) # Get product by its unique slug
+    serializer = DetailedProductSerializer(product) # Serialize product detail data for JSON response
+    return Response(serializer.data) # Return serialized product data as JSON
 
 @api_view(["POST"])
 def add_item(request):
     try:
+        # Get cart_code and product_id from request data
         cart_code = request.data.get("cart_code")
         product_id = request.data.get("product_id")
 
-        cart, created = Cart.objects.get_or_create(cart_code = cart_code)
-        product = Product.objects.get(id=product_id)
+        cart, created = Cart.objects.get_or_create(cart_code=cart_code) # Get or create Cart using cart_code
+        product = Product.objects.get(id=product_id) # Get product by ID
 
-        cartitem, created = CartItem.objects.get_or_create(cart=cart, product=product)
+        cartitem, created = CartItem.objects.get_or_create(cart=cart, product=product)  # Get or create CartItem for this product in this cart
         cartitem.quantity = 1
         cartitem.save()
 
-        serializer = CartItemSerializer(cartitem)
+        serializer = CartItemSerializer(cartitem) # Serialize new cart item
         return Response({"data": serializer.data, "message": "Cartitem created successfully"}, status=201)
     except Exception as e:
         return Response({"error": str(e)}, status=400)
 
 @api_view(["GET"])
 def product_in_cart(request):
+    # Get cart_code and product_id from query params
     cart_code = request.query_params.get("cart_code")
     product_id = request.query_params.get("product_id")
 
-    cart = Cart.objects.get(cart_code=cart_code)
-    product = Product.objects.get(id=product_id)
+    cart = Cart.objects.get(cart_code=cart_code) # Get cart using cart_code
+    product = Product.objects.get(id=product_id)  # Get product by ID
 
-    product_exists_in_cart = CartItem.objects.filter(cart=cart, product=product).exists()
+    product_exists_in_cart = CartItem.objects.filter(cart=cart, product=product).exists() # Check if product exists in cart
 
     return Response({'product_in_cart': product_exists_in_cart})
 
@@ -70,28 +72,31 @@ def get_cart_stat(request):
     if not cart_code:
         return Response({'error': 'Missing cart_code'}, status=400)
 
-    cart, created = Cart.objects.get_or_create(cart_code=cart_code)
-    num_of_items = cart.items.count()
-    return Response({'num_of_items': num_of_items})
+    cart, created = Cart.objects.get_or_create(cart_code=cart_code) # Get or create cart based on cart_code
+    num_of_items = cart.items.count() # Count total items in cart
+    return Response({'num_of_items': num_of_items}) # Return count
 
 
 @api_view(['GET'])
 def get_cart(request):
     cart_code = request.query_params.get("cart_code")
-    cart = Cart.objects.get(cart_code=cart_code, paid=False)
-    serializer = CartSerializer(cart)
+    cart = Cart.objects.get(cart_code=cart_code, paid=False) # Get cart that is not yet paid
+    serializer = CartSerializer(cart) # Serialize cart including all items
     return Response(serializer.data)
 
 @api_view(['PATCH'])
 def update_quantity(request) :
     try:
+        # Get item ID and new quantity from request
         cartitem_id = request.data.get("item_id")
         quantity = request.data.get("quantity")
-        quantity = int(quantity)
+        quantity = int(quantity) # convert quantity into int value (since 'request.data.get' returns a string)
+        # Get cart item
         cartitem = CartItem.objects.get(id=cartitem_id)
+        # Update quantity
         cartitem.quantity = quantity
-        cartitem. save()
-        serializer = CartItemSerializer(cartitem)
+        cartitem.save()
+        serializer = CartItemSerializer(cartitem) # Serialize updated item
         return Response({ "data":serializer.data, "message": "Cartitem updated successfully!"})
     
     except Exception as e:
@@ -99,8 +104,8 @@ def update_quantity(request) :
     
 @api_view(['POST'])
 def delete_cartitem(request):
-    cartitem_id = request.data.get("item_id")
-    cartitem = CartItem.objects.get(id=cartitem_id)
+    cartitem_id = request.data.get("item_id") # Get item ID from request
+    cartitem = CartItem.objects.get(id=cartitem_id) # Get cart item
     cartitem.delete()
     return Response({"message": "item deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
@@ -113,7 +118,7 @@ def get_username(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def user_info(request):
-    user = request.user
+    user = request.user # Only accessible to authenticated users
     serializer = UserSerializer(user)
     return Response(serializer.data)
 
@@ -126,13 +131,14 @@ def initiate_payment(request):
             cart_code = request.data.get("cart_code") # request "cart_code" from frontend
             cart = Cart.objects.get(cart_code=cart_code)
             user = request.user
-
+            # Calculate total amount + tax
             amount = sum([(item.quantity * item.product.price) for item in cart.items.all()])
             tax = Decimal("4.00")
             total_amount = amount + tax
             currency = "INR"
             redirect_url = f"{BASE_URL}/payment-status/" # redirect to frontend payment status page
-
+            
+            # Save transaction to db
             transaction = Transaction.objects.create(
                 ref=tx_ref,
                 cart=cart,
@@ -141,10 +147,11 @@ def initiate_payment(request):
                 user=user,
                 status='pending'
             )
-
+            
+            # Prepare payload for Flutterwave API
             flutterwave_payload = {
                 "tx_ref": tx_ref,
-                "amount": str(total_amount), # Convert to string
+                "amount": str(total_amount), # Convert total_amount to string
                 "currency": currency,
                 "redirect_url": redirect_url,
                 "customer": {
@@ -153,7 +160,7 @@ def initiate_payment(request):
                     "phonenumber": user.phone
                 },
                 "customizations": {
-                    "title": "Shoppit Payment"
+                    "title": "JoBiju Mart Payment"
                 }
             }
 
@@ -164,10 +171,7 @@ def initiate_payment(request):
             }
             
             # make the API request to Flutterwave
-            response = requests.post('https://api.flutterwave.com/v3/payments',
-                                     json=flutterwave_payload,
-                                     headers=headers
-                                    )
+            response = requests.post('https://api.flutterwave.com/v3/payments', json=flutterwave_payload, headers=headers)
             if response.status_code == 200:
                 return Response(response.json(), status=status.HTTP_200_OK)
             else:
@@ -200,7 +204,8 @@ def payment_callback(request):
             if (response_data['data']['status'] == "successful"
                     and float(response_data['data'] ['amount']) == float(transaction.amount)
                     and response_data['data'] ['currency'] == transaction.currency):
-
+                
+                # Mark transaction and cart as paid
                 transaction.status = 'completed'
                 transaction.save()
 
@@ -315,6 +320,7 @@ def paypal_payment_callback(request):
 
 class RegisterView(APIView):
     def post(self, request):
+        # Extract user data from request
         username = request.data.get('username')
         email = request.data.get('email')
         password = request.data.get('password')
@@ -324,13 +330,16 @@ class RegisterView(APIView):
         address = request.data.get('address', '')
         city = request.data.get('city', '')
         state = request.data.get('state', '')
-
+        
+        # Validate required fields
         if not username or not email or not password:
             return Response({"error": "Username, email and password are required"}, status=status.HTTP_400_BAD_REQUEST)
-
+        
+        # if user with same username already exists, return an error
         if get_user_model().objects.filter(username=username).exists():
             return Response({"error": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
-
+        
+        # Create new user
         user = get_user_model().objects.create_user(
             username=username,
             email=email,
@@ -343,9 +352,6 @@ class RegisterView(APIView):
             state=state
         )
 
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-        }, status=status.HTTP_201_CREATED)
+        refresh = RefreshToken.for_user(user) # Generate JWT tokens
+        return Response({"refresh": str(refresh), "access": str(refresh.access_token),}, status=status.HTTP_201_CREATED)
 

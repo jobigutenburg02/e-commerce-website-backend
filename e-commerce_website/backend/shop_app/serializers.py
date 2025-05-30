@@ -12,7 +12,8 @@ class DetailedProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ["id", "name", "price", "slug", "image", "description", "similar_products"]
-
+    
+    # Get products in the same category, excluding current one
     def get_similar_products(self, product):
         products = Product.objects.filter(category=product.category).exclude(id=product.id)
         serializer = ProductSerializer(products, many=True)
@@ -26,8 +27,9 @@ class CartItemSerializer(serializers.ModelSerializer):
         model = CartItem
         fields = ["id", "quantity", "product", "total"]
     
+    # Calculate total price for this item (price * quantity)
     def get_total(self, cartitem):
-        price = cartitem.product.price*cartitem.quantity
+        price = cartitem.product.price * cartitem.quantity
         return price
 
 class CartSerializer(serializers.ModelSerializer):
@@ -38,13 +40,15 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ["id","cart_code", "items", "sum_total", "num_of_items","created_at","modified_at"]
-
+    
+    # Total price of all items in cart
     def get_sum_total(self, cart):
         items = cart.items.all()
         total = sum([(item.product.price * item.quantity) for item in items])
         return total
     
-    def get_num_of_items(self,cart):
+    # Total number of items in cart
+    def get_num_of_items(self, cart):
         items = cart.items.all()
         total = sum([item.quantity for item in items])
         return total
@@ -54,9 +58,11 @@ class SimpleCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ["id", "cart_code", "num_of_items"]
-
+    
+    # Total number of items in cart
     def get_num_of_items(self, cart):
-        num_of_items = sum([item.quantity for item in cart.items.all()])
+        items = cart.items.all()
+        num_of_items = sum([item.quantity for item in items])
         return num_of_items
 
 class NewCartItemSerializer(serializers.ModelSerializer):
@@ -67,11 +73,13 @@ class NewCartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = ["id", "product", "quantity", "order_id", "order_date"]
-
+    
+    # Get associated cart code as order ID
     def get_order_id(self, cartitem):
         order_id = cartitem.cart.cart_code
         return order_id
-
+    
+    # Get last modified date of cart as order date
     def get_order_date(self, cartitem):
         order_date = cartitem.cart.modified_at
         return order_date
@@ -82,9 +90,10 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ["id", "username", "first_name", "last_name", "email", "city", "state", "address", "phone", "items"]
-
+    
+    # Get up to 10 most recent purchased items
     def get_items(self, user):
-        cartitems = CartItem.objects.filter(cart__user=user, cart__paid=True)[:10] # display atmost 10 items
+        cartitems = CartItem.objects.filter(cart__user=user, cart__paid=True)[:10]
         serializer = NewCartItemSerializer(cartitems,many=True)
         return serializer.data
 
@@ -94,7 +103,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ['username', 'email', 'password', 'first_name', 'last_name', 'phone', 'address', 'city', 'state']
-
+    
+    # Create a new user using custom user model
     def create(self, validated_data):
         user = get_user_model().objects.create_user(**validated_data)
         return user
