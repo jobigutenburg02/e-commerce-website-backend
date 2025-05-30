@@ -14,9 +14,6 @@ This is the **backend** part of a full-stack e-commerce website built using **Dj
 - Ready-to-use with React frontend
 
 ---
-## Before Getting Started
-
-First visit [my frontend repo](https://github.com/jobigutenburg02/e-commerce-website-frontend) and complete the steps mentioned before proceeding to the following steps.
 
 ## Getting Started
 
@@ -74,12 +71,12 @@ c) Once both the backend and frontend are running, you’ll be able to:
 
 ## Technologies Used
 
-1. Python – Programming language
-2. Django – Web framework
-3. DRF – For building APIs
-4. SQLite – Database
-5. JWT Authentication – Secure user login
-6. Django Admin – Built-in admin interface
+- Python – Programming language
+- Django – Web framework
+- DRF – For building APIs
+- SQLite – Database
+- JWT Authentication – Secure user login
+- Django Admin – Built-in admin interface
 
 ## API Endpoints
 
