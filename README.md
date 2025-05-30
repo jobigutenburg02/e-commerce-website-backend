@@ -14,6 +14,9 @@ This is the **backend** part of a full-stack e-commerce website built using **Dj
 - Ready-to-use with React frontend
 
 ---
+## Before Getting Started
+
+First visit [my frontend repo](https://github.com/jobigutenburg02/e-commerce-website-frontend) and complete the steps mentioned before proceeding to the following steps.
 
 ## Getting Started
 
@@ -59,8 +62,7 @@ python manage.py runserver
 
 To see the complete e-commerce experience, make sure to also run the **React frontend**:
 
-a) Visit the frontend repository:
-   [E-Commerce Website Frontend](https://github.com/jobigutenburg02/e-commerce-website-frontend)
+a) Visit [my frontend repo](https://github.com/jobigutenburg02/e-commerce-website-frontend)
 
 b) Follow the instructions in its `README.md` to install dependencies and start the app.
 
@@ -85,40 +87,56 @@ Below is a list of available endpoints for interacting with the backend.
 
 ### Authentication & Registration
 
-POST `/register/` -  Register a new user
+| Endpoint                 | Method | Description                              |
+|--------------------------|--------|------------------------------------------|
+| `/register/`             | POST   | Register a new user                      |
 
-**Note:** Login can be handled via Django REST Framework JWT or session authentication.
+**Note:** Login can be handled via Django REST Framework JWT or session authentication. Here, I am using JWT authentication.
 
 ---
 
 ### Cart Management
 
-1. POST `/add_item/` -  Add product to cart             
-2. POST `/update_quantity/` -  Update quantity of item in cart
-3. POST `/delete_cartitem/` -  Remove item from cart
-4. GET `/get_cart` -  Retrieve full cart details
-5. GET `/product_in_cart` -  Check if product is in cart
-6. GET `/get_cart_stat` -  Get total items and price
+| Endpoint                 | Method | Description                              |
+|--------------------------|--------|------------------------------------------|
+| `/add_item/`             | POST   | Add product to cart                      |
+| `/update_quantity/`      | PATCH  | Update quantity of item in cart          |
+| `/delete_cartitem/`      | DELETE | Remove item from cart                    |
+| `/get_cart`              | GET    | Retrieve full cart details               |
+| `/product_in_cart`       | GET    | Check if product is in cart              |
+| `/get_cart_stat`         | GET    | Get total items in cart                  |
 
 ---
 
 ### Product Endpoints
 
-1. GET `/products` -  List all products
-2. GET `/product_detail/<slug>` -  Get details of a specific product
+| Endpoint                     | Method | Description                          |
+|------------------------------|--------|--------------------------------------|
+| `/products`                  | GET    | List all products                    |
+| `/product_detail/<slug>`     | GET    | Get details of a specific product    |
 
 ---
 
 ### Payment Endpoints
 
-1. POST `/initiate_payment/` -  Initiate Flutterwave payment
-2. POST `/payment_callback/` -  Handle Flutterwave payment confirmation
-3. POST `/initiate_paypal_payment/` -  Initiate PayPal payment
-4. POST `/paypal_payment_callback/` -  Handle PayPal payment confirmation
+| Endpoint                     | Method | Description                              |
+|------------------------------|--------|------------------------------------------|
+|  `/initiate_payment/`        | POST   | Initiate Flutterwave payment             |
+| `/payment_callback/`         | POST   | Handle Flutterwave payment confirmation  |
+| `/initiate_paypal_payment/`  | POST   | Initiate PayPal payment                  |
+| `/paypal_payment_callback/`  | POST   |Handle PayPal payment confirmation        |
 
 ---
 
 ### User Info
 
-1. GET `/get_username` -  Get currently logged-in user
-2. GET `/user_info` -  Get detailed user info
+| Endpoint                    | Method | Description                              |
+|-----------------------------|--------|------------------------------------------|
+| `/get_username`             | GET    | Get currently logged-in user             |
+| `/user_info`                | GET    | Get detailed user info                   |
+
+## Support
+
+For support and questions:
+- Create an issue in the repository
+- Contact: jbros2513@gmail.com
